@@ -1,0 +1,177 @@
+{% extends 'dashboard_base.html' %}
+{% block title %}HuggingFace Models - Admin{% endblock %}
+{% block page_title %}<i class="fas fa-robot"></i> HuggingFace Model Management{% endblock %}
+
+{% block content %}
+<!-- Model Stats -->
+<div class="row mb-4">
+  <div class="col-md-4 mb-3">
+    <div class="stat-card" style="background: var(--gradient-primary);">
+      <i class="fas fa-robot stat-icon"></i>
+      <p>Total Models</p>
+      <h2>{{ saved_models|length }}</h2>
+    </div>
+  </div>
+  <div class="col-md-4 mb-3">
+    <div class="stat-card" style="background: var(--gradient-success);">
+      <i class="fas fa-check-circle stat-icon"></i>
+      <p>Enabled</p>
+      <h2>{{ saved_models|selectattr('is_enabled')|list|length }}</h2>
+    </div>
+  </div>
+  <div class="col-md-4 mb-3">
+    <div class="stat-card" style="background: var(--gradient-info);">
+      <i class="fas fa-list stat-icon"></i>
+      <p>Curated</p>
+      <h2>{{ curated_models|length }}</h2>
+    </div>
+  </div>
+</div>
+
+<!-- Search HuggingFace -->
+<div class="card mb-4">
+  <div class="card-header"><i class="fas fa-search"></i> Search HuggingFace Hub</div>
+  <div class="card-body">
+    <form method="POST" action="{{ url_for('admin.search_models') }}" class="row g-2">
+      <div class="col-md-8">
+        <input type="text" name="query" class="form-control" placeholder="Search for models (e.g., lung cancer, medical imaging, chest x-ray)..." value="{{ search_query|default('') }}">
+      </div>
+      <div class="col-md-4">
+        <button type="submit" class="btn btn-primary w-100"><i class="fas fa-search"></i> Search HuggingFace</button>
+      </div>
+    </form>
+
+    {% if search_results is defined and search_results %}
+    <hr>
+    <h6 class="fw-bold mb-3">Search Results</h6>
+    <div class="row">
+      {% for r in search_results %}
+      <div class="col-md-6 mb-3">
+        <div class="card">
+          <div class="card-body">
+            <h6 class="fw-bold" style="font-size:0.9rem;">
+              <i class="fas fa-robot" style="color:var(--info);"></i> {{ r.model_id }}
+            </h6>
+            <p class="text-muted" style="font-size:0.8rem; margin-bottom:0.5rem;">{{ r.description }}</p>
+            <form method="POST" action="{{ url_for('admin.add_model') }}" style="display:inline;">
+              <input type="hidden" name="model_id" value="{{ r.model_id }}">
+              <input type="hidden" name="model_name" value="{{ r.model_name }}">
+              <input type="hidden" name="description" value="{{ r.description }}">
+              <button type="submit" class="btn btn-sm btn-primary"><i class="fas fa-plus"></i> Add</button>
+            </form>
+            <a href="https://huggingface.co/{{ r.model_id }}" target="_blank" class="btn btn-sm btn-outline-secondary">
+              <i class="fas fa-external-link-alt"></i> View
+            </a>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Curated Models (Quick Add) -->
+<div class="card mb-4">
+  <div class="card-header"><i class="fas fa-star"></i> Curated Models (Recommended for Lung Cancer)</div>
+  <div class="card-body">
+    <div class="row">
+      {% for m in curated_models %}
+      <div class="col-md-6 mb-3">
+        <div class="p-3" style="background:#f8fafc; border-radius:10px; border:1px solid #e2e8f0;">
+          <h6 class="fw-bold" style="font-size:0.9rem;">
+            <i class="fas fa-star" style="color:#f59e0b;"></i> {{ m.model_name }}
+          </h6>
+          <p class="text-muted mb-2" style="font-size:0.8rem;">{{ m.description }}</p>
+          <small class="text-muted d-block mb-2"><code>{{ m.model_id }}</code></small>
+          <form method="POST" action="{{ url_for('admin.add_model') }}" style="display:inline;">
+            <input type="hidden" name="model_id" value="{{ m.model_id }}">
+            <input type="hidden" name="model_name" value="{{ m.model_name }}">
+            <input type="hidden" name="description" value="{{ m.description }}">
+            <button type="submit" class="btn btn-sm btn-primary"><i class="fas fa-plus"></i> Add to System</button>
+          </form>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<!-- Added Models -->
+<div class="card mb-4">
+  <div class="card-header"><i class="fas fa-cogs"></i> System Models</div>
+  <div class="card-body">
+    <!-- Local CNN (always available) -->
+    <div class="d-flex align-items-center justify-content-between p-3 mb-3" style="background:#f0fdf4; border-radius:10px; border:2px solid #86efac;">
+      <div>
+        <h6 class="fw-bold mb-0"><i class="fas fa-brain" style="color:#10b981;"></i> Local CNN Model</h6>
+        <small class="text-muted">Custom trained CNN on your dataset — Always available</small>
+      </div>
+      <span class="badge badge-active"><i class="fas fa-check"></i> Always Active</span>
+    </div>
+
+    {% if saved_models %}
+      {% for m in saved_models %}
+      <div class="d-flex align-items-center justify-content-between p-3 mb-2" style="background:#f8fafc; border-radius:10px; border:1px solid #e2e8f0;">
+        <div class="flex-grow-1 me-3">
+          <h6 class="fw-bold mb-0" style="font-size:0.9rem;">
+            <i class="fas fa-robot" style="color:var(--info);"></i> {{ m.model_name }}
+          </h6>
+          <small class="text-muted">{{ m.model_id }}</small>
+          {% if m.description %}
+          <br><small class="text-muted">{{ m.description[:100] }}</small>
+          {% endif %}
+        </div>
+        <div class="d-flex align-items-center gap-2">
+          {% if m.is_enabled %}
+            <span class="badge badge-active"><i class="fas fa-check"></i> Enabled</span>
+          {% else %}
+            <span class="badge badge-inactive"><i class="fas fa-times"></i> Disabled</span>
+          {% endif %}
+
+          <form method="POST" action="{{ url_for('admin.toggle_model', model_db_id=m.id) }}" style="display:inline;">
+            <button type="submit" class="btn btn-sm {% if m.is_enabled %}btn-outline-warning{% else %}btn-outline-success{% endif %}">
+              {% if m.is_enabled %}<i class="fas fa-pause"></i> Disable{% else %}<i class="fas fa-play"></i> Enable{% endif %}
+            </button>
+          </form>
+
+          <a href="{{ url_for('admin.model_detail', model_db_id=m.id) }}" class="btn btn-sm btn-outline-primary">
+            <i class="fas fa-info-circle"></i>
+          </a>
+
+          <form method="POST" action="{{ url_for('admin.delete_model', model_db_id=m.id) }}" style="display:inline;" onsubmit="return confirm('Remove this model?');">
+            <button type="submit" class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></button>
+          </form>
+        </div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <p class="text-muted text-center py-3">No HuggingFace models added yet. Use the search above or add from curated list.</p>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Manual Add -->
+<div class="card">
+  <div class="card-header"><i class="fas fa-plus-circle"></i> Add Model Manually</div>
+  <div class="card-body">
+    <form method="POST" action="{{ url_for('admin.add_model') }}" class="row g-3">
+      <div class="col-md-4">
+        <label class="form-label">Model ID</label>
+        <input type="text" name="model_id" class="form-control" placeholder="e.g., username/model-name" required>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Display Name</label>
+        <input type="text" name="model_name" class="form-control" placeholder="Friendly name">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Description</label>
+        <input type="text" name="description" class="form-control" placeholder="Brief description">
+      </div>
+      <div class="col-md-2 d-flex align-items-end">
+        <button type="submit" class="btn btn-primary w-100"><i class="fas fa-plus"></i> Add</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

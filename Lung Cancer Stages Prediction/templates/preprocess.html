@@ -1,0 +1,58 @@
+{% extends 'dashboard_base.html' %}
+{% block content %}
+  <h2><i class="fas fa-database"></i> Dataset Preprocessing</h2>
+  
+  {% if exists %}
+    <div class="alert alert-success">
+      <i class="fas fa-check-circle"></i> <strong>Ready!</strong> Preprocessed dataset found in model/ directory.
+    </div>
+  {% else %}
+    <div class="alert alert-warning">
+      <i class="fas fa-info-circle"></i> No preprocessed dataset detected yet.
+    </div>
+  {% endif %}
+  
+  <div class="card">
+    <div class="card-header"><i class="fas fa-cog"></i> Preprocessing Configuration</div>
+    <div class="card-body">
+      <p>The preprocessing pipeline will:</p>
+      <ul>
+        <li>Scan the <code>Dataset/</code> folder for medical images</li>
+        <li>Resize all images to 32×32 pixels</li>
+        <li>Normalize pixel values to [0, 1] range</li>
+        <li>Save processed data as NumPy arrays for training</li>
+      </ul>
+      <hr/>
+      <button class="btn btn-primary" onclick="runPreprocess()">
+        <i class="fas fa-play"></i> Run Preprocessing
+      </button>
+    </div>
+  </div>
+  
+  <div id="status" style="margin-top: 2rem; display:none;">
+    <div class="alert alert-info">
+      <div class="spinner-border spinner-border-sm me-2" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+      <span id="status-text">Processing...</span>
+    </div>
+  </div>
+  
+  <script>
+    async function runPreprocess() {
+      document.getElementById('status').style.display = 'block';
+      try {
+        const resp = await fetch('/preprocess', {method: 'POST'});
+        const json = await resp.json();
+        if (json.success) {
+          document.getElementById('status-text').textContent = 'Success! ' + json.count + ' images processed.';
+          document.getElementById('status').innerHTML = '<div class="alert alert-success"><i class="fas fa-check-circle"></i> ' + json.count + ' images preprocessed and saved!</div>';
+        } else {
+          document.getElementById('status').innerHTML = '<div class="alert alert-danger"><i class="fas fa-exclamation-circle"></i> Error: ' + json.error + '</div>';
+        }
+      } catch (e) {
+        document.getElementById('status').innerHTML = '<div class="alert alert-danger"><i class="fas fa-exclamation-circle"></i> Error: ' + e + '</div>';
+      }
+    }
+  </script>
+{% endblock %}

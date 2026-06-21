@@ -1,0 +1,134 @@
+{% extends 'dashboard_base.html' %}
+{% block title %}New Prediction - Lung Cancer AI{% endblock %}
+{% block page_title %}<i class="fas fa-upload"></i> New Prediction{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-8">
+    <div class="card">
+      <div class="card-header"><i class="fas fa-upload"></i> Upload Medical Image</div>
+      <div class="card-body">
+        {% if error %}
+          <div class="alert alert-danger">
+            <i class="fas fa-exclamation-circle"></i> {{ error }}
+          </div>
+        {% endif %}
+
+        <form method="POST" enctype="multipart/form-data" id="predictForm">
+          <!-- Image Upload Zone -->
+          <div class="upload-zone mb-4" id="uploadZone" onclick="document.getElementById('imageInput').click()">
+            <i class="fas fa-cloud-upload-alt"></i>
+            <h5 style="color:#64748b; font-weight:600;">Drop your medical image here</h5>
+            <p style="color:#94a3b8; font-size:0.9rem;">or click to browse — JPG, PNG, BMP supported</p>
+            <img id="imagePreview" style="max-width:300px; max-height:200px; border-radius:8px; display:none; margin-top:1rem;">
+          </div>
+          <input type="file" name="image" id="imageInput" accept="image/*" required style="display:none;" onchange="previewImage(this)">
+
+          <!-- Model Selection -->
+          <div class="mb-4">
+            <label class="form-label fw-bold"><i class="fas fa-robot"></i> Select Prediction Model</label>
+            <div class="row">
+              <div class="col-md-6 mb-2">
+                <div class="form-check p-3" style="background:#f8fafc; border-radius:10px; border:2px solid #e2e8f0;">
+                  <input class="form-check-input" type="radio" name="model_choice" value="local_cnn" id="modelLocal" checked>
+                  <label class="form-check-label" for="modelLocal">
+                    <strong><i class="fas fa-brain"></i> Local CNN Model</strong>
+                    <br><small class="text-muted">Trained on your dataset — fast & accurate</small>
+                  </label>
+                </div>
+              </div>
+              {% for m in enabled_models %}
+              <div class="col-md-6 mb-2">
+                <div class="form-check p-3" style="background:#f0f0ff; border-radius:10px; border:2px solid #e0e7ff;">
+                  <input class="form-check-input" type="radio" name="model_choice" value="{{ m.model_id }}" id="model{{ m.id }}">
+                  <label class="form-check-label" for="model{{ m.id }}">
+                    <strong><i class="fas fa-robot"></i> {{ m.model_name }}</strong>
+                    <br><small class="text-muted">HuggingFace — {{ m.description[:60] }}...</small>
+                  </label>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-lg w-100" id="predictBtn">
+            <i class="fas fa-magic"></i> Analyze & Predict
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Info Panel -->
+  <div class="col-md-4">
+    <div class="card mb-4">
+      <div class="card-header"><i class="fas fa-info-circle"></i> How It Works</div>
+      <div class="card-body">
+        <div class="d-flex mb-3">
+          <div class="me-3" style="width:30px;height:30px;background:var(--gradient-primary);border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:0.8rem;flex-shrink:0;">1</div>
+          <div><strong>Upload</strong><br><small class="text-muted">Select a lung CT scan or X-ray image</small></div>
+        </div>
+        <div class="d-flex mb-3">
+          <div class="me-3" style="width:30px;height:30px;background:var(--gradient-info);border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:0.8rem;flex-shrink:0;">2</div>
+          <div><strong>Select Model</strong><br><small class="text-muted">Choose local CNN or HuggingFace model</small></div>
+        </div>
+        <div class="d-flex mb-3">
+          <div class="me-3" style="width:30px;height:30px;background:var(--gradient-success);border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:0.8rem;flex-shrink:0;">3</div>
+          <div><strong>Get Results</strong><br><small class="text-muted">AI predicts the cancer stage</small></div>
+        </div>
+        <div class="d-flex">
+          <div class="me-3" style="width:30px;height:30px;background:var(--gradient-warning);border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:0.8rem;flex-shrink:0;">4</div>
+          <div><strong>XAI Explanation</strong><br><small class="text-muted">Understand results with treatment advice</small></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><i class="fas fa-stethoscope"></i> Cancer Stages</div>
+      <div class="card-body">
+        <div class="mb-2"><span class="badge-stage badge-normal">Normal</span> No cancer detected</div>
+        <div class="mb-2"><span class="badge-stage badge-stage1">Stage 1</span> Early, localized</div>
+        <div class="mb-2"><span class="badge-stage badge-stage2">Stage 2</span> Moderate spread</div>
+        <div class="mb-2"><span class="badge-stage badge-stage3">Stage 3</span> Advanced stage</div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function previewImage(input) {
+  if (input.files && input.files[0]) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const preview = document.getElementById('imagePreview');
+      preview.src = e.target.result;
+      preview.style.display = 'block';
+      document.querySelector('.upload-zone h5').textContent = input.files[0].name;
+      document.querySelector('.upload-zone p').textContent = 'Image loaded — ready for analysis';
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
+}
+
+// Drag & drop
+const zone = document.getElementById('uploadZone');
+zone.addEventListener('dragover', (e) => { e.preventDefault(); zone.classList.add('dragover'); });
+zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+zone.addEventListener('drop', (e) => {
+  e.preventDefault();
+  zone.classList.remove('dragover');
+  const input = document.getElementById('imageInput');
+  input.files = e.dataTransfer.files;
+  previewImage(input);
+});
+
+// Loading state
+document.getElementById('predictForm').addEventListener('submit', function() {
+  const btn = document.getElementById('predictBtn');
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyzing...';
+  btn.disabled = true;
+});
+</script>
+{% endblock %}

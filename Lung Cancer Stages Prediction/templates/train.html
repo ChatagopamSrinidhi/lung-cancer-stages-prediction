@@ -1,0 +1,65 @@
+{% extends 'dashboard_base.html' %}
+{% block content %}
+  <h2><i class="fas fa-graduation-cap"></i> Model Training</h2>
+  
+  <div class="card">
+    <div class="card-header"><i class="fas fa-sliders-h"></i> Training Parameters</div>
+    <div class="card-body">
+      <form id="trainForm" method="post">
+        <div class="row">
+          <div class="col-md-6">
+            <label for="epochs" class="form-label">Epochs</label>
+            <input id="epochs" name="epochs" class="form-control" type="number" value="20" min="1" max="100">
+            <small class="text-muted">Number of complete passes through the dataset</small>
+          </div>
+          <div class="col-md-6">
+            <label for="batch" class="form-label">Batch Size</label>
+            <input id="batch" name="batch" class="form-control" type="number" value="32" min="1" max="128">
+            <small class="text-muted">Number of samples per gradient update</small>
+          </div>
+        </div>
+        <hr/>
+        <button class="btn btn-primary btn-lg" type="submit">
+          <i class="fas fa-play"></i> Start Training
+        </button>
+      </form>
+    </div>
+  </div>
+  
+  <div class="card mt-4">
+    <div class="card-header"><i class="fas fa-spinner"></i> Training Status</div>
+    <div class="card-body">
+      <div id="status" style="font-weight: 500;">
+        <p>Status: <span id="progress">{{ status['progress'] }}</span></p>
+      </div>
+      <div class="progress">
+        <div class="progress-bar progress-bar-striped progress-bar-animated" id="prog" role="progressbar" style="width: 0%"></div>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    document.getElementById('trainForm').addEventListener('submit', async function(e){
+      e.preventDefault();
+      const form = e.target;
+      const data = new FormData(form);
+      const resp = await fetch('/train', {method:'POST', body: data});
+      const json = await resp.json();
+      if(json.started){
+        document.getElementById('progress').textContent = 'Training started...';
+        // poll status
+        const pollInterval = setInterval(async ()=>{
+          const s = await fetch('/train_status');
+          const j = await s.json();
+          document.getElementById('progress').textContent = j.progress;
+          if(!j.running){
+            clearInterval(pollInterval);
+            document.getElementById('prog').style.width = '100%';
+          }
+        },2000);
+      } else {
+        alert('Training already running or error occurred');
+      }
+    });
+  </script>
+{% endblock %}

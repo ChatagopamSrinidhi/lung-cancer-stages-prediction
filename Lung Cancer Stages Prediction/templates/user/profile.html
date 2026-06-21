@@ -1,0 +1,64 @@
+{% extends 'dashboard_base.html' %}
+{% block title %}My Profile - Lung Cancer AI{% endblock %}
+{% block page_title %}<i class="fas fa-user-cog"></i> My Profile{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-4 mb-4">
+    <div class="card text-center">
+      <div class="card-body py-5">
+        <div style="width:80px;height:80px;background:var(--gradient-primary);border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-size:2rem;font-weight:700;margin:0 auto 1rem;">
+          {{ current_user.username[0]|upper }}
+        </div>
+        <h4 style="font-weight:700;">{{ current_user.username }}</h4>
+        <p class="text-muted">{{ current_user.email }}</p>
+        <span class="badge badge-user-role"><i class="fas fa-user"></i> {{ current_user.role|title }}</span>
+        <hr>
+        <p class="mb-1" style="font-size:0.85rem; color:#64748b;">
+          <i class="fas fa-calendar"></i> Joined: {{ current_user.created_at.strftime('%B %d, %Y') }}
+        </p>
+        {% if current_user.last_login %}
+        <p class="mb-0" style="font-size:0.85rem; color:#64748b;">
+          <i class="fas fa-clock"></i> Last login: {{ current_user.last_login.strftime('%b %d, %Y %H:%M') }}
+        </p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-8">
+    <div class="card">
+      <div class="card-header"><i class="fas fa-edit"></i> Update Profile</div>
+      <div class="card-body">
+        <form method="POST">
+          <h6 class="fw-bold mb-3">Account Information</h6>
+          <div class="mb-3">
+            <label class="form-label">Username</label>
+            <input type="text" class="form-control" value="{{ current_user.username }}" disabled>
+            <small class="text-muted">Username cannot be changed</small>
+          </div>
+          <div class="mb-4">
+            <label class="form-label">Email</label>
+            <input type="email" name="email" class="form-control" value="{{ current_user.email }}">
+          </div>
+
+          <hr>
+          <h6 class="fw-bold mb-3">Change Password</h6>
+          <div class="mb-3">
+            <label class="form-label">Current Password</label>
+            <input type="password" name="current_password" class="form-control" placeholder="Enter current password">
+          </div>
+          <div class="mb-4">
+            <label class="form-label">New Password</label>
+            <input type="password" name="new_password" class="form-control" placeholder="Enter new password (min 6 chars)">
+          </div>
+
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save"></i> Save Changes
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,135 @@
+{% extends 'dashboard_base.html' %}
+{% block title %}Prediction Result - Lung Cancer AI{% endblock %}
+{% block page_title %}<i class="fas fa-clipboard-check"></i> Prediction Result{% endblock %}
+
+{% block content %}
+<!-- Result Header -->
+<div class="mb-4 p-4" style="background: {{ explanation.color }}15; border-left: 5px solid {{ explanation.color }}; border-radius: 12px;">
+  <div class="row align-items-center">
+    <div class="col-md-8">
+      <h3 style="font-weight:700; color:{{ explanation.color }};">
+        <i class="fas {{ explanation.icon }}"></i> {{ explanation.predicted_label }}
+      </h3>
+      <p class="mb-1"><strong>Severity:</strong> {{ explanation.severity }}</p>
+      <p class="mb-0"><strong>Confidence:</strong> {{ "%.1f"|format(explanation.confidence) }}% ({{ explanation.confidence_level }})</p>
+    </div>
+    <div class="col-md-4 text-end">
+      <a href="{{ url_for('user.predict') }}" class="btn btn-primary">
+        <i class="fas fa-redo"></i> New Prediction
+      </a>
+      <a href="{{ url_for('user.history') }}" class="btn btn-outline-secondary">
+        <i class="fas fa-history"></i> History
+      </a>
+    </div>
+  </div>
+</div>
+
+<div class="row">
+  <!-- Left: Image & Probabilities -->
+  <div class="col-md-5 mb-4">
+    <!-- Uploaded Image -->
+    <div class="card mb-4">
+      <div class="card-header"><i class="fas fa-image"></i> Uploaded Image</div>
+      <div class="card-body text-center">
+        <img src="/uploads/{{ filename }}" style="max-width:100%; max-height:300px; border-radius:10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+      </div>
+    </div>
+
+    <!-- Prediction Probabilities -->
+    <div class="card mb-4">
+      <div class="card-header"><i class="fas fa-chart-bar"></i> Prediction Probabilities</div>
+      <div class="card-body">
+        {% for label, prob in probs_dict.items() %}
+        {% set pct = (prob * 100) if prob <= 1 else prob %}
+        <div class="mb-3">
+          <div class="d-flex justify-content-between mb-1">
+            <strong style="font-size:0.85rem;">{{ label }}</strong>
+            <span style="font-size:0.85rem;">{{ "%.1f"|format(pct) }}%</span>
+          </div>
+          <div class="progress" style="height:10px; border-radius:5px;">
+            <div class="progress-bar" style="width:{{ pct }}%; background:{% if label == 'Normal' %}#10b981{% elif label == 'Stage1' %}#f59e0b{% elif label == 'Stage2' %}#f97316{% else %}#ef4444{% endif %}; border-radius:5px;"></div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- XAI Visualization -->
+    {% if gradcam_b64 %}
+    <div class="card">
+      <div class="card-header"><i class="fas fa-eye"></i> XAI: Grad-CAM Visualization</div>
+      <div class="card-body text-center">
+        <img src="data:image/png;base64,{{ gradcam_b64 }}" style="max-width:100%; border-radius:10px;">
+        <p class="text-muted mt-2" style="font-size:0.8rem;">
+          <i class="fas fa-info-circle"></i> Heatmap shows regions the model focused on for this prediction.
+        </p>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Right: XAI Explanation -->
+  <div class="col-md-7">
+    <!-- Risk Level -->
+    <div class="xai-section">
+      <h5 style="font-weight:700;"><i class="fas fa-heartbeat"></i> Risk Assessment</h5>
+      <div class="risk-indicator">
+        <div class="risk-fill" style="width:{{ (explanation.risk_level + 1) * 25 }}%; background:{{ explanation.color }};"></div>
+      </div>
+      <div class="d-flex justify-content-between" style="font-size:0.75rem; color:#94a3b8;">
+        <span>Normal</span><span>Stage 1</span><span>Stage 2</span><span>Stage 3</span>
+      </div>
+      <p class="mt-3" style="font-size:0.9rem;">{{ explanation.confidence_note }}</p>
+    </div>
+
+    <!-- What This Means -->
+    <div class="xai-section">
+      <h5 style="font-weight:700;"><i class="fas fa-lightbulb"></i> What This Means</h5>
+      <p style="font-size:0.9rem; line-height:1.7;">{{ explanation.description }}</p>
+    </div>
+
+    <!-- Medical Explanation -->
+    <div class="xai-section">
+      <h5 style="font-weight:700;"><i class="fas fa-stethoscope"></i> Medical Explanation</h5>
+      <p style="font-size:0.9rem; line-height:1.7; white-space:pre-line;">{{ explanation.medical_explanation }}</p>
+    </div>
+
+    <!-- Treatment Suggestions -->
+    <div class="xai-section">
+      <h5 style="font-weight:700; color: var(--primary);"><i class="fas fa-prescription"></i> Treatment Suggestions</h5>
+      {% for suggestion in explanation.treatment_suggestions %}
+      <div class="treatment-card">
+        <i class="fas fa-chevron-right" style="color:var(--primary); margin-right:8px;"></i>
+        {{ suggestion }}
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- Precautions -->
+    <div class="xai-section">
+      <h5 style="font-weight:700; color: var(--warning);"><i class="fas fa-shield-alt"></i> Precautions & Recommendations</h5>
+      {% for precaution in explanation.precautions %}
+      <div class="precaution-card">
+        <i class="fas fa-exclamation-triangle" style="color:var(--warning); margin-right:8px;"></i>
+        {{ precaution }}
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- Next Steps -->
+    <div class="xai-section">
+      <h5 style="font-weight:700; color: var(--info);"><i class="fas fa-arrow-right"></i> Recommended Next Steps</h5>
+      <ol style="font-size:0.9rem; line-height:2;">
+        {% for step in explanation.next_steps %}
+        <li>{{ step }}</li>
+        {% endfor %}
+      </ol>
+    </div>
+
+    <!-- Disclaimer -->
+    <div class="alert alert-warning" style="font-size:0.85rem;">
+      <i class="fas fa-exclamation-triangle"></i> <strong>Disclaimer:</strong> {{ explanation.disclaimer }}
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,88 @@
+{% extends 'dashboard_base.html' %}
+{% block title %}Prediction History - Lung Cancer AI{% endblock %}
+{% block page_title %}<i class="fas fa-history"></i> My Prediction History{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <span><i class="fas fa-history"></i> All Predictions</span>
+    <a href="{{ url_for('user.predict') }}" class="btn btn-sm btn-primary"><i class="fas fa-plus"></i> New Prediction</a>
+  </div>
+  <div class="card-body p-0">
+    {% if predictions.items %}
+    <table class="table table-hover mb-0">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Date & Time</th>
+          <th>Image</th>
+          <th>Predicted Stage</th>
+          <th>Confidence</th>
+          <th>Model Used</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in predictions.items %}
+        <tr>
+          <td>{{ p.id }}</td>
+          <td>{{ p.created_at.strftime('%b %d, %Y %H:%M') }}</td>
+          <td>
+            <img src="/uploads/{{ p.image_filename }}" style="width:40px; height:40px; border-radius:6px; object-fit:cover;">
+          </td>
+          <td>
+            <span class="badge-stage badge-{{ p.predicted_label|lower }}">
+              {{ p.predicted_label }}
+            </span>
+          </td>
+          <td>
+            <strong>{{ "%.1f"|format(p.confidence) }}%</strong>
+          </td>
+          <td><small class="text-muted">{{ p.model_used }}</small></td>
+          <td>
+            <a href="{{ url_for('user.prediction_detail', prediction_id=p.id) }}" class="btn btn-sm btn-outline-primary">
+              <i class="fas fa-eye"></i> Details
+            </a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <!-- Pagination -->
+    {% if predictions.has_prev or predictions.has_next %}
+    <nav class="d-flex justify-content-center py-3">
+      <ul class="pagination mb-0">
+        {% if predictions.has_prev %}
+        <li class="page-item">
+          <a class="page-link" href="{{ url_for('user.history', page=predictions.prev_num) }}"><i class="fas fa-chevron-left"></i></a>
+        </li>
+        {% endif %}
+        {% for p in predictions.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+          {% if p %}
+            <li class="page-item {% if p == predictions.page %}active{% endif %}">
+              <a class="page-link" href="{{ url_for('user.history', page=p) }}">{{ p }}</a>
+            </li>
+          {% else %}
+            <li class="page-item disabled"><span class="page-link">...</span></li>
+          {% endif %}
+        {% endfor %}
+        {% if predictions.has_next %}
+        <li class="page-item">
+          <a class="page-link" href="{{ url_for('user.history', page=predictions.next_num) }}"><i class="fas fa-chevron-right"></i></a>
+        </li>
+        {% endif %}
+      </ul>
+    </nav>
+    {% endif %}
+
+    {% else %}
+    <div class="text-center py-5">
+      <i class="fas fa-inbox" style="font-size:3rem; color:#cbd5e1;"></i>
+      <p class="mt-3 text-muted">No predictions found.</p>
+      <a href="{{ url_for('user.predict') }}" class="btn btn-primary"><i class="fas fa-upload"></i> Make Your First Prediction</a>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,423 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Lung Cancer AI Detection System{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+      :root {
+        --primary: #6366f1;
+        --primary-dark: #4f46e5;
+        --secondary: #ec4899;
+        --success: #10b981;
+        --warning: #f59e0b;
+        --danger: #ef4444;
+        --info: #3b82f6;
+        --dark: #1e293b;
+        --sidebar-width: 260px;
+        --gradient-primary: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+        --gradient-danger: linear-gradient(135deg, #ef4444 0%, #f97316 100%);
+        --gradient-success: linear-gradient(135deg, #10b981 0%, #06b6d4 100%);
+        --gradient-warning: linear-gradient(135deg, #f59e0b 0%, #eab308 100%);
+        --gradient-info: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%);
+      }
+
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+
+      body {
+        font-family: 'Inter', sans-serif;
+        background: #f1f5f9;
+        color: #334155;
+        min-height: 100vh;
+      }
+
+      /* ─── Sidebar ──────────────────────────────────────── */
+      .sidebar {
+        position: fixed;
+        top: 0; left: 0;
+        width: var(--sidebar-width);
+        height: 100vh;
+        background: var(--dark);
+        color: white;
+        z-index: 1000;
+        transition: transform 0.3s;
+        overflow-y: auto;
+      }
+
+      .sidebar-brand {
+        padding: 1.5rem;
+        text-align: center;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+      }
+
+      .sidebar-brand h4 {
+        font-weight: 700;
+        font-size: 1.1rem;
+        margin: 0;
+      }
+
+      .sidebar-brand small {
+        opacity: 0.7;
+        font-size: 0.75rem;
+      }
+
+      .sidebar-nav { padding: 1rem 0; }
+
+      .sidebar-nav .nav-section {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        padding: 0.75rem 1.5rem 0.25rem;
+        opacity: 0.5;
+        font-weight: 600;
+      }
+
+      .sidebar-nav a {
+        display: flex;
+        align-items: center;
+        padding: 0.65rem 1.5rem;
+        color: rgba(255,255,255,0.7);
+        text-decoration: none;
+        font-size: 0.9rem;
+        transition: all 0.2s;
+        border-left: 3px solid transparent;
+      }
+
+      .sidebar-nav a:hover,
+      .sidebar-nav a.active {
+        color: white;
+        background: rgba(255,255,255,0.08);
+        border-left-color: var(--primary);
+      }
+
+      .sidebar-nav a i {
+        width: 24px;
+        margin-right: 12px;
+        text-align: center;
+        font-size: 0.95rem;
+      }
+
+      /* ─── Main Content ─────────────────────────────────── */
+      .main-content {
+        margin-left: var(--sidebar-width);
+        min-height: 100vh;
+      }
+
+      .top-bar {
+        background: white;
+        padding: 0.75rem 2rem;
+        border-bottom: 1px solid #e2e8f0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: sticky;
+        top: 0;
+        z-index: 500;
+      }
+
+      .top-bar .user-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .top-bar .user-avatar {
+        width: 36px; height: 36px;
+        border-radius: 50%;
+        background: var(--gradient-primary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 700;
+        font-size: 0.85rem;
+      }
+
+      .content-area {
+        padding: 2rem;
+      }
+
+      /* ─── Stat Cards ───────────────────────────────────── */
+      .stat-card {
+        border-radius: 12px;
+        padding: 1.5rem;
+        color: white;
+        position: relative;
+        overflow: hidden;
+        min-height: 120px;
+      }
+
+      .stat-card .stat-icon {
+        position: absolute;
+        right: 15px;
+        top: 15px;
+        font-size: 2.5rem;
+        opacity: 0.2;
+      }
+
+      .stat-card h2 {
+        font-size: 2rem;
+        font-weight: 800;
+        margin: 0.25rem 0;
+      }
+
+      .stat-card p {
+        margin: 0;
+        opacity: 0.85;
+        font-size: 0.85rem;
+        font-weight: 500;
+      }
+
+      /* ─── Cards ────────────────────────────────────────── */
+      .card {
+        border: none;
+        border-radius: 12px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        transition: box-shadow 0.3s;
+      }
+
+      .card:hover {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      }
+
+      .card-header {
+        background: white;
+        border-bottom: 1px solid #f1f5f9;
+        font-weight: 600;
+        padding: 1rem 1.25rem;
+      }
+
+      /* ─── Buttons ──────────────────────────────────────── */
+      .btn { border-radius: 8px; font-weight: 500; }
+      .btn-primary { background: var(--primary); border-color: var(--primary); }
+      .btn-primary:hover { background: var(--primary-dark); }
+      .btn-danger { background: var(--danger); border: none; }
+      .btn-success { background: var(--success); border: none; }
+      .btn-warning { background: var(--warning); border: none; color: white; }
+      .btn-warning:hover { color: white; }
+
+      /* ─── Tables ───────────────────────────────────────── */
+      .table { font-size: 0.9rem; }
+      .table th {
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.5px;
+        color: #64748b;
+        border-bottom: 2px solid #e2e8f0;
+      }
+
+      /* ─── Badges ───────────────────────────────────────── */
+      .badge-stage {
+        padding: 0.35rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+      }
+      .badge-normal { background: #dcfce7; color: #166534; }
+      .badge-stage1 { background: #fef9c3; color: #854d0e; }
+      .badge-stage2 { background: #fed7aa; color: #9a3412; }
+      .badge-stage3 { background: #fecaca; color: #991b1b; }
+      .badge-admin { background: var(--gradient-primary); color: white; }
+      .badge-user-role { background: #e0e7ff; color: #3730a3; }
+      .badge-active { background: #dcfce7; color: #166534; }
+      .badge-inactive { background: #fecaca; color: #991b1b; }
+
+      /* ─── XAI Section ──────────────────────────────────── */
+      .xai-section {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      }
+
+      .risk-indicator {
+        width: 100%;
+        height: 12px;
+        background: #e2e8f0;
+        border-radius: 6px;
+        overflow: hidden;
+        margin: 1rem 0;
+      }
+
+      .risk-indicator .risk-fill {
+        height: 100%;
+        border-radius: 6px;
+        transition: width 0.8s ease;
+      }
+
+      .treatment-card {
+        border-left: 4px solid var(--primary);
+        padding: 1rem 1.25rem;
+        margin-bottom: 0.75rem;
+        background: #f8fafc;
+        border-radius: 0 8px 8px 0;
+      }
+
+      .precaution-card {
+        border-left: 4px solid var(--warning);
+        padding: 1rem 1.25rem;
+        margin-bottom: 0.75rem;
+        background: #fffbeb;
+        border-radius: 0 8px 8px 0;
+      }
+
+      /* ─── Upload Area ──────────────────────────────────── */
+      .upload-zone {
+        border: 2px dashed #cbd5e1;
+        border-radius: 12px;
+        padding: 3rem;
+        text-align: center;
+        transition: all 0.3s;
+        cursor: pointer;
+      }
+
+      .upload-zone:hover, .upload-zone.dragover {
+        border-color: var(--primary);
+        background: #f0f0ff;
+      }
+
+      .upload-zone i {
+        font-size: 3rem;
+        color: #94a3b8;
+        margin-bottom: 1rem;
+      }
+
+      /* ─── Responsive ───────────────────────────────────── */
+      @media (max-width: 768px) {
+        .sidebar { transform: translateX(-100%); }
+        .sidebar.show { transform: translateX(0); }
+        .main-content { margin-left: 0; }
+        .content-area { padding: 1rem; }
+      }
+
+      /* ─── Pagination ───────────────────────────────────── */
+      .pagination .page-link {
+        border-radius: 8px;
+        margin: 0 2px;
+        border: none;
+        color: var(--primary);
+      }
+      .pagination .page-item.active .page-link {
+        background: var(--primary);
+        color: white;
+      }
+
+      /* ─── Scrollbar ────────────────────────────────────── */
+      ::-webkit-scrollbar { width: 6px; }
+      ::-webkit-scrollbar-track { background: transparent; }
+      ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+
+      /* Animations */
+      .fade-in { animation: fadeIn 0.5s ease-in; }
+      @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+    {% block extra_css %}{% endblock %}
+  </head>
+  <body>
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+      <div class="sidebar-brand">
+        <h4><i class="fas fa-lungs"></i> Lung Cancer AI</h4>
+        <small>Detection & Analysis System</small>
+      </div>
+      <nav class="sidebar-nav">
+        {% if current_user.is_authenticated and current_user.is_admin %}
+          <!-- Admin Navigation -->
+          <div class="nav-section">Admin Panel</div>
+          <a href="{{ url_for('admin.dashboard') }}" class="{% if request.endpoint == 'admin.dashboard' %}active{% endif %}">
+            <i class="fas fa-chart-pie"></i> Dashboard
+          </a>
+          <a href="{{ url_for('admin.users') }}" class="{% if 'admin.user' in request.endpoint|default('') %}active{% endif %}">
+            <i class="fas fa-users"></i> User Management
+          </a>
+          <a href="{{ url_for('admin.all_predictions') }}" class="{% if request.endpoint == 'admin.all_predictions' %}active{% endif %}">
+            <i class="fas fa-history"></i> All Predictions
+          </a>
+          <a href="{{ url_for('admin.models') }}" class="{% if 'admin.model' in request.endpoint|default('') %}active{% endif %}">
+            <i class="fas fa-robot"></i> HuggingFace Models
+          </a>
+          <div class="nav-section">Tools</div>
+          <a href="{{ url_for('preprocess_page') }}"><i class="fas fa-database"></i> Preprocess Data</a>
+          <a href="{{ url_for('train') }}"><i class="fas fa-graduation-cap"></i> Train Model</a>
+          <a href="{{ url_for('history') }}"><i class="fas fa-chart-line"></i> Training History</a>
+          <a href="{{ url_for('model_info') }}"><i class="fas fa-brain"></i> Model Info</a>
+        {% elif current_user.is_authenticated %}
+          <!-- User Navigation -->
+          <div class="nav-section">Navigation</div>
+          <a href="{{ url_for('user.dashboard') }}" class="{% if request.endpoint == 'user.dashboard' %}active{% endif %}">
+            <i class="fas fa-chart-pie"></i> Dashboard
+          </a>
+          <a href="{{ url_for('user.predict') }}" class="{% if request.endpoint == 'user.predict' %}active{% endif %}">
+            <i class="fas fa-upload"></i> New Prediction
+          </a>
+          <a href="{{ url_for('user.history') }}" class="{% if request.endpoint == 'user.history' %}active{% endif %}">
+            <i class="fas fa-history"></i> My History
+          </a>
+          <a href="{{ url_for('user.profile') }}" class="{% if request.endpoint == 'user.profile' %}active{% endif %}">
+            <i class="fas fa-user-cog"></i> Profile
+          </a>
+        {% endif %}
+
+        {% if current_user.is_authenticated %}
+          <div class="nav-section">Account</div>
+          <a href="{{ url_for('auth.logout') }}"><i class="fas fa-sign-out-alt"></i> Logout</a>
+        {% endif %}
+      </nav>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+      <!-- Top Bar -->
+      <div class="top-bar">
+        <div>
+          <button class="btn btn-sm btn-outline-secondary d-md-none" onclick="document.getElementById('sidebar').classList.toggle('show')">
+            <i class="fas fa-bars"></i>
+          </button>
+          <span class="ms-2 fw-600" style="font-weight:600;">
+            {% block page_title %}Dashboard{% endblock %}
+          </span>
+        </div>
+        <div class="user-info">
+          {% if current_user.is_authenticated %}
+            <span class="text-muted" style="font-size:0.85rem;">
+              {% if current_user.is_admin %}
+                <span class="badge badge-admin"><i class="fas fa-shield-alt"></i> Admin</span>
+              {% else %}
+                <span class="badge badge-user-role"><i class="fas fa-user"></i> User</span>
+              {% endif %}
+            </span>
+            <div class="user-avatar">{{ current_user.username[0]|upper }}</div>
+            <span style="font-weight:500; font-size:0.9rem;">{{ current_user.username }}</span>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Page Content -->
+      <div class="content-area fade-in">
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                <i class="fas fa-{% if category == 'success' %}check-circle{% elif category == 'danger' %}exclamation-circle{% elif category == 'warning' %}exclamation-triangle{% else %}info-circle{% endif %}"></i>
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    {% block extra_js %}{% endblock %}
+  </body>
+</html>

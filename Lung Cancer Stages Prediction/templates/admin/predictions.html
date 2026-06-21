@@ -1,0 +1,104 @@
+{% extends 'dashboard_base.html' %}
+{% block title %}All Predictions - Lung Cancer AI Admin{% endblock %}
+{% block page_title %}<i class="fas fa-history"></i> All Predictions{% endblock %}
+
+{% block content %}
+<!-- Filters -->
+<div class="card mb-4">
+  <div class="card-body">
+    <form method="GET" class="row g-2 align-items-end">
+      <div class="col-md-3">
+        <label class="form-label" style="font-size:0.8rem;">Filter by Stage</label>
+        <select name="stage" class="form-select">
+          <option value="">All Stages</option>
+          <option value="Normal" {% if stage_filter == 'Normal' %}selected{% endif %}>Normal</option>
+          <option value="Stage1" {% if stage_filter == 'Stage1' %}selected{% endif %}>Stage 1</option>
+          <option value="Stage2" {% if stage_filter == 'Stage2' %}selected{% endif %}>Stage 2</option>
+          <option value="Stage3" {% if stage_filter == 'Stage3' %}selected{% endif %}>Stage 3</option>
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label" style="font-size:0.8rem;">Filter by User</label>
+        <select name="user_id" class="form-select">
+          <option value="">All Users</option>
+          {% for u in users_list %}
+          <option value="{{ u.id }}" {% if user_filter == u.id|string %}selected{% endif %}>{{ u.username }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-2">
+        <button type="submit" class="btn btn-primary w-100"><i class="fas fa-filter"></i> Filter</button>
+      </div>
+      <div class="col-md-2">
+        <a href="{{ url_for('admin.all_predictions') }}" class="btn btn-outline-secondary w-100">Clear</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Predictions Table -->
+<div class="card">
+  <div class="card-header"><i class="fas fa-list"></i> Predictions ({{ predictions.total }})</div>
+  <div class="card-body p-0">
+    {% if predictions.items %}
+    <table class="table table-hover mb-0">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>User</th>
+          <th>Date</th>
+          <th>Image</th>
+          <th>Result</th>
+          <th>Confidence</th>
+          <th>Model</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in predictions.items %}
+        <tr>
+          <td>{{ p.id }}</td>
+          <td>
+            <a href="{{ url_for('admin.user_predictions', user_id=p.user_id) }}">{{ p.user.username }}</a>
+          </td>
+          <td>{{ p.created_at.strftime('%b %d, %Y %H:%M') }}</td>
+          <td>
+            <img src="/uploads/{{ p.image_filename }}" style="width:36px;height:36px;border-radius:6px;object-fit:cover;">
+          </td>
+          <td><span class="badge-stage badge-{{ p.predicted_label|lower }}">{{ p.predicted_label }}</span></td>
+          <td><strong>{{ "%.1f"|format(p.confidence) }}%</strong></td>
+          <td><small class="text-muted">{{ p.model_used }}</small></td>
+          <td>
+            <a href="{{ url_for('admin.prediction_detail', prediction_id=p.id) }}" class="btn btn-sm btn-outline-primary"><i class="fas fa-eye"></i></a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="text-center py-5 text-muted">No predictions found.</div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Pagination -->
+{% if predictions.has_prev or predictions.has_next %}
+<nav class="d-flex justify-content-center mt-3">
+  <ul class="pagination mb-0">
+    {% if predictions.has_prev %}
+    <li class="page-item"><a class="page-link" href="{{ url_for('admin.all_predictions', page=predictions.prev_num, stage=stage_filter, user_id=user_filter) }}"><i class="fas fa-chevron-left"></i></a></li>
+    {% endif %}
+    {% for pg in predictions.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+      {% if pg %}
+        <li class="page-item {% if pg == predictions.page %}active{% endif %}"><a class="page-link" href="{{ url_for('admin.all_predictions', page=pg, stage=stage_filter, user_id=user_filter) }}">{{ pg }}</a></li>
+      {% else %}
+        <li class="page-item disabled"><span class="page-link">...</span></li>
+      {% endif %}
+    {% endfor %}
+    {% if predictions.has_next %}
+    <li class="page-item"><a class="page-link" href="{{ url_for('admin.all_predictions', page=predictions.next_num, stage=stage_filter, user_id=user_filter) }}"><i class="fas fa-chevron-right"></i></a></li>
+    {% endif %}
+  </ul>
+</nav>
+{% endif %}
+{% endblock %}

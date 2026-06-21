@@ -1,0 +1,49 @@
+{% extends 'dashboard_base.html' %}
+{% block content %}
+  <h2><i class="fas fa-brain"></i> Model Performance & Metrics</h2>
+  
+  {% if error %}
+    <div class="alert alert-danger">
+      <i class="fas fa-exclamation-circle"></i> <strong>Error:</strong> {{ error }}
+    </div>
+  {% else %}
+    <div class="row">
+      <div class="col-md-6">
+        <div class="card mb-3">
+          <div class="card-header"><i class="fas fa-vial"></i> Test Loss</div>
+          <div class="card-body">
+            <h3 class="text-center" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
+              {{ (loss)|round(4) }}
+            </h3>
+            <p class="text-center text-muted">Lower is better</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-md-6">
+        <div class="card mb-3">
+          <div class="card-header"><i class="fas fa-check-double"></i> Test Accuracy</div>
+          <div class="card-body">
+            <h3 class="text-center" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
+              {{ (acc*100)|round(2) }}%
+            </h3>
+            <p class="text-center text-muted">On held-out test set</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="card">
+      <div class="card-header"><i class="fas fa-tasks"></i> Detected Cancer Stages</div>
+      <div class="card-body">
+        <ul class="list-unstyled">
+          {% for label in labels %}
+            <li class="mb-2">
+              <badge class="badge" style="background: var(--primary-gradient);">{{ label }}</badge>
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  {% endif %}
+{% endblock %}

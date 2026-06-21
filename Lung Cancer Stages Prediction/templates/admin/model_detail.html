@@ -1,0 +1,82 @@
+{% extends 'dashboard_base.html' %}
+{% block title %}Model Detail - Admin{% endblock %}
+{% block page_title %}<i class="fas fa-robot"></i> Model Detail{% endblock %}
+
+{% block content %}
+<a href="{{ url_for('admin.models') }}" class="btn btn-outline-secondary mb-3"><i class="fas fa-arrow-left"></i> Back to Models</a>
+
+<div class="row">
+  <div class="col-md-8">
+    <div class="card mb-4">
+      <div class="card-header"><i class="fas fa-info-circle"></i> {{ model.model_name }}</div>
+      <div class="card-body">
+        <table class="table">
+          <tr><th style="width:150px;">Model ID</th><td><code>{{ model.model_id }}</code></td></tr>
+          <tr><th>Display Name</th><td>{{ model.model_name }}</td></tr>
+          <tr><th>Description</th><td>{{ model.description or 'N/A' }}</td></tr>
+          <tr><th>Pipeline</th><td>{{ model.pipeline_tag or 'image-classification' }}</td></tr>
+          <tr><th>Status</th><td>
+            {% if model.is_enabled %}
+              <span class="badge badge-active"><i class="fas fa-check"></i> Enabled</span>
+            {% else %}
+              <span class="badge badge-inactive"><i class="fas fa-times"></i> Disabled</span>
+            {% endif %}
+          </td></tr>
+          <tr><th>Added</th><td>{{ model.added_at.strftime('%B %d, %Y') }}</td></tr>
+        </table>
+
+        <div class="mt-3">
+          <form method="POST" action="{{ url_for('admin.toggle_model', model_db_id=model.id) }}" style="display:inline;">
+            <button type="submit" class="btn {% if model.is_enabled %}btn-warning{% else %}btn-success{% endif %}">
+              {% if model.is_enabled %}<i class="fas fa-pause"></i> Disable{% else %}<i class="fas fa-play"></i> Enable{% endif %}
+            </button>
+          </form>
+          <a href="https://huggingface.co/{{ model.model_id }}" target="_blank" class="btn btn-outline-primary">
+            <i class="fas fa-external-link-alt"></i> View on HuggingFace
+          </a>
+        </div>
+      </div>
+    </div>
+
+    {% if hf_info %}
+    <div class="card">
+      <div class="card-header"><i class="fas fa-globe"></i> HuggingFace Hub Info</div>
+      <div class="card-body">
+        <table class="table">
+          <tr><th>Downloads</th><td>{{ "{:,}".format(hf_info.get('downloads', 0)) }}</td></tr>
+          <tr><th>Likes</th><td>{{ hf_info.get('likes', 0) }}</td></tr>
+          <tr><th>Pipeline</th><td>{{ hf_info.get('pipeline_tag', 'N/A') }}</td></tr>
+          <tr><th>Library</th><td>{{ hf_info.get('library_name', 'N/A') }}</td></tr>
+          <tr><th>Last Modified</th><td>{{ hf_info.get('lastModified', 'N/A') }}</td></tr>
+          {% if hf_info.get('tags') %}
+          <tr><th>Tags</th><td>
+            {% for tag in hf_info.get('tags', [])[:15] %}
+              <span class="badge bg-light text-dark me-1 mb-1">{{ tag }}</span>
+            {% endfor %}
+          </td></tr>
+          {% endif %}
+        </table>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="col-md-4">
+    <div class="card">
+      <div class="card-header"><i class="fas fa-lightbulb"></i> Usage Guide</div>
+      <div class="card-body" style="font-size:0.9rem;">
+        <p>To use this model for predictions:</p>
+        <ol>
+          <li>Ensure the model is <strong>Enabled</strong></li>
+          <li>Users will see it as an option in the prediction page</li>
+          <li>The model will be downloaded automatically on first use</li>
+          <li>Predictions are mapped to: Normal, Stage1, Stage2, Stage3</li>
+        </ol>
+        <div class="alert alert-info" style="font-size:0.8rem;">
+          <i class="fas fa-info-circle"></i> HuggingFace models require the <code>transformers</code> library and may take time to download on first use.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

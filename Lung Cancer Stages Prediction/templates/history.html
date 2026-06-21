@@ -1,0 +1,79 @@
+{% extends 'dashboard_base.html' %}
+{% block content %}
+  <h2><i class="fas fa-chart-line"></i> Training History & Metrics</h2>
+  
+  {% if plot_b64 %}
+    <div class="card mb-4">
+      <div class="card-header"><i class="fas fa-graph"></i> Training Curves</div>
+      <div class="card-body text-center">
+        <img src="data:image/png;base64,{{ plot_b64 }}" class="img-fluid" style="max-width: 100%; border-radius: 8px;">
+      </div>
+    </div>
+  {% endif %}
+  
+  {% if history %}
+    <div class="row">
+      {% if history.get('accuracy') %}
+        <div class="col-md-6">
+          <div class="card">
+            <div class="card-header"><i class="fas fa-percent"></i> Training Accuracy</div>
+            <div class="card-body">
+              <h3 class="text-center" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
+                {{ (history['accuracy'][-1]*100)|round(2) }}%
+              </h3>
+              <small class="text-muted">Last Epoch Value</small>
+            </div>
+          </div>
+        </div>
+      {% endif %}
+      
+      {% if history.get('val_accuracy') %}
+        <div class="col-md-6">
+          <div class="card">
+            <div class="card-header"><i class="fas fa-check-circle"></i> Validation Accuracy</div>
+            <div class="card-body">
+              <h3 class="text-center" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
+                {{ (history['val_accuracy'][-1]*100)|round(2) }}%
+              </h3>
+              <small class="text-muted">Last Epoch Value</small>
+            </div>
+          </div>
+        </div>
+      {% endif %}
+    </div>
+    
+    <div class="row mt-3">
+      {% if history.get('loss') %}
+        <div class="col-md-6">
+          <div class="card">
+            <div class="card-header"><i class="fas fa-bolt"></i> Training Loss</div>
+            <div class="card-body">
+              <h3 class="text-center" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
+                {{ (history['loss'][-1])|round(4) }}
+              </h3>
+              <small class="text-muted">Last Epoch Value</small>
+            </div>
+          </div>
+        </div>
+      {% endif %}
+      
+      {% if history.get('val_loss') %}
+        <div class="col-md-6">
+          <div class="card">
+            <div class="card-header"><i class="fas fa-exclamation-triangle"></i> Validation Loss</div>
+            <div class="card-body">
+              <h3 class="text-center" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
+                {{ (history['val_loss'][-1])|round(4) }}
+              </h3>
+              <small class="text-muted">Last Epoch Value</small>
+            </div>
+          </div>
+        </div>
+      {% endif %}
+    </div>
+  {% else %}
+    <div class="alert alert-warning">
+      <i class="fas fa-info-circle"></i> No training history found. Train the model first.
+    </div>
+  {% endif %}
+{% endblock %}

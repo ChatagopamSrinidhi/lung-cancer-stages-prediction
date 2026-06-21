@@ -1,0 +1,49 @@
+{% extends 'dashboard_base.html' %}
+{% block title %}User Predictions - Admin{% endblock %}
+{% block page_title %}<i class="fas fa-user"></i> {{ target_user.username }}'s Predictions{% endblock %}
+
+{% block content %}
+<a href="{{ url_for('admin.users') }}" class="btn btn-outline-secondary mb-3"><i class="fas fa-arrow-left"></i> Back to Users</a>
+
+<!-- User Info -->
+<div class="card mb-4">
+  <div class="card-body d-flex align-items-center">
+    <div style="width:48px;height:48px;background:var(--gradient-primary);border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:1.2rem;margin-right:15px;">
+      {{ target_user.username[0]|upper }}
+    </div>
+    <div>
+      <h5 class="mb-0">{{ target_user.username }}</h5>
+      <small class="text-muted">{{ target_user.email }} | Joined {{ target_user.created_at.strftime('%b %d, %Y') }}</small>
+    </div>
+  </div>
+</div>
+
+<!-- Predictions -->
+<div class="card">
+  <div class="card-header"><i class="fas fa-history"></i> Predictions ({{ predictions.total }})</div>
+  <div class="card-body p-0">
+    {% if predictions.items %}
+    <table class="table table-hover mb-0">
+      <thead>
+        <tr><th>#</th><th>Date</th><th>Image</th><th>Result</th><th>Confidence</th><th>Model</th><th></th></tr>
+      </thead>
+      <tbody>
+        {% for p in predictions.items %}
+        <tr>
+          <td>{{ p.id }}</td>
+          <td>{{ p.created_at.strftime('%b %d, %Y %H:%M') }}</td>
+          <td><img src="/uploads/{{ p.image_filename }}" style="width:36px;height:36px;border-radius:6px;object-fit:cover;"></td>
+          <td><span class="badge-stage badge-{{ p.predicted_label|lower }}">{{ p.predicted_label }}</span></td>
+          <td>{{ "%.1f"|format(p.confidence) }}%</td>
+          <td><small>{{ p.model_used }}</small></td>
+          <td><a href="{{ url_for('admin.prediction_detail', prediction_id=p.id) }}" class="btn btn-sm btn-outline-primary"><i class="fas fa-eye"></i></a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="text-center py-4 text-muted">No predictions from this user.</div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

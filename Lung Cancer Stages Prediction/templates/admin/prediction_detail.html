@@ -1,0 +1,81 @@
+{% extends 'dashboard_base.html' %}
+{% block title %}Prediction Detail - Admin{% endblock %}
+{% block page_title %}<i class="fas fa-clipboard-check"></i> Prediction #{{ prediction.id }}{% endblock %}
+
+{% block content %}
+<a href="{{ url_for('admin.all_predictions') }}" class="btn btn-outline-secondary mb-3"><i class="fas fa-arrow-left"></i> Back</a>
+
+<!-- Header -->
+<div class="mb-4 p-4" style="background: {% if explanation %}{{ explanation.color }}{% else %}#6366f1{% endif %}15; border-left: 5px solid {% if explanation %}{{ explanation.color }}{% else %}#6366f1{% endif %}; border-radius: 12px;">
+  <div class="row align-items-center">
+    <div class="col-md-8">
+      <h3 style="font-weight:700; color:{% if explanation %}{{ explanation.color }}{% else %}#6366f1{% endif %};">
+        {% if explanation %}<i class="fas {{ explanation.icon }}"></i>{% endif %} {{ prediction.predicted_label }}
+      </h3>
+      <p class="mb-1"><strong>User:</strong> {{ prediction.user.username }}</p>
+      <p class="mb-1"><strong>Date:</strong> {{ prediction.created_at.strftime('%B %d, %Y at %H:%M') }}</p>
+      <p class="mb-1"><strong>Confidence:</strong> {{ "%.1f"|format(prediction.confidence) }}%</p>
+      <p class="mb-0"><strong>Model:</strong> {{ prediction.model_used }}</p>
+    </div>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-md-5 mb-4">
+    <div class="card mb-4">
+      <div class="card-header"><i class="fas fa-image"></i> Image</div>
+      <div class="card-body text-center">
+        <img src="/uploads/{{ prediction.image_filename }}" style="max-width:100%;max-height:300px;border-radius:10px;">
+      </div>
+    </div>
+
+    {% if probs_dict %}
+    <div class="card">
+      <div class="card-header"><i class="fas fa-chart-bar"></i> Probabilities</div>
+      <div class="card-body">
+        {% for label, prob in probs_dict.items() %}
+        {% set pct = (prob * 100) if prob <= 1 else prob %}
+        <div class="mb-3">
+          <div class="d-flex justify-content-between mb-1">
+            <strong style="font-size:0.85rem;">{{ label }}</strong>
+            <span>{{ "%.1f"|format(pct) }}%</span>
+          </div>
+          <div class="progress" style="height:10px;">
+            <div class="progress-bar" style="width:{{ pct }}%; background:{% if label == 'Normal' %}#10b981{% elif label == 'Stage1' %}#f59e0b{% elif label == 'Stage2' %}#f97316{% else %}#ef4444{% endif %};"></div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="col-md-7">
+    {% if explanation %}
+    <div class="xai-section">
+      <h5 style="font-weight:700;"><i class="fas fa-lightbulb"></i> What This Means</h5>
+      <p style="font-size:0.9rem; line-height:1.7;">{{ explanation.description }}</p>
+    </div>
+
+    <div class="xai-section">
+      <h5 style="font-weight:700;"><i class="fas fa-stethoscope"></i> Medical Explanation</h5>
+      <p style="font-size:0.9rem; line-height:1.7; white-space:pre-line;">{{ explanation.medical_explanation }}</p>
+    </div>
+
+    <div class="xai-section">
+      <h5 style="font-weight:700; color:var(--primary);"><i class="fas fa-prescription"></i> Treatment</h5>
+      {% for s in explanation.treatment_suggestions %}
+      <div class="treatment-card">{{ s }}</div>
+      {% endfor %}
+    </div>
+
+    <div class="xai-section">
+      <h5 style="font-weight:700; color:var(--warning);"><i class="fas fa-shield-alt"></i> Precautions</h5>
+      {% for p in explanation.precautions %}
+      <div class="precaution-card">{{ p }}</div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
